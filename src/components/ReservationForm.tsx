@@ -35,8 +35,9 @@ const ReservationForm = ({ isOpen, onClose }: ReservationFormProps) => {
     time: "",
     specialRequests: ""
   });
+  const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!date) {
@@ -48,14 +49,36 @@ const ReservationForm = ({ isOpen, onClose }: ReservationFormProps) => {
       return;
     }
 
-    toast({
-      title: "Reservation Confirmed! 🎉",
-      description: `Table for ${formData.guests} on ${format(date, "MMMM d, yyyy")} at ${formData.time}. We look forward to seeing you, ${formData.fullName}!`,
-    });
+    try {
+      const response = await fetch(`${apiUrl}/api/reservations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          date: format(date, "yyyy-MM-dd"),
+        }),
+      });
 
-    setFormData({ fullName: "", phone: "", email: "", guests: "", time: "", specialRequests: "" });
-    setDate(undefined);
-    onClose();
+      if (!response.ok) {
+        throw new Error("Unable to save reservation.");
+      }
+
+      toast({
+        title: "Reservation Confirmed! 🎉",
+        description: `Table for ${formData.guests} on ${format(date, "MMMM d, yyyy")} at ${formData.time}. We look forward to seeing you, ${formData.fullName}!`,
+      });
+
+      setFormData({ fullName: "", phone: "", email: "", guests: "", time: "", specialRequests: "" });
+      setDate(undefined);
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Reservation failed",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    }
+
   };
 
   return (
