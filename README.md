@@ -36,6 +36,50 @@ npm i
 npm run dev
 ```
 
+## MongoDB setup (API server)
+
+This project now includes a minimal Express API server to connect to MongoDB.
+
+**Database design**
+- Database name: `highway40` (set via `MONGODB_DB`)
+- Collections:
+  - `reservations` for table bookings
+  - `delivery_orders` for delivery orders
+
+1. Copy the example environment file and set your connection string:
+
+```sh
+cp .env.example .env
+```
+
+2. Start the API server (in a separate terminal):
+
+```sh
+npm run server:dev
+```
+
+3. Verify the connection:
+
+```sh
+curl http://localhost:3001/api/health
+```
+
+4. Create a reservation:
+
+```sh
+curl -X POST http://localhost:3001/api/reservations \
+  -H "Content-Type: application/json" \
+  -d '{"fullName":"John Doe","phone":"(812) 555-0123","email":"john@example.com","guests":"2","date":"2026-02-14","time":"6:30 PM","specialRequests":"Window seat"}'
+```
+
+5. Create a delivery order:
+
+```sh
+curl -X POST http://localhost:3001/api/delivery-orders \
+  -H "Content-Type: application/json" \
+  -d '{"fullName":"Jane Doe","phone":"(812) 555-0456","address":"123 Main St","city":"Brazil","zipCode":"47834","notes":"Leave at door","items":[{"id":"bs2","name":"Classic Cheeseburger","price":9.29}],"total":9.29}'
+```
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).

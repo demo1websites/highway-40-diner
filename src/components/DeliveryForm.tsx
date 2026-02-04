@@ -27,6 +27,7 @@ const DeliveryForm = ({ isOpen, onClose, selectedItems, onRemoveItem, onClearIte
     zipCode: "",
     notes: ""
   });
+  const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
 
   const calculateTotal = () => {
     return selectedItems.reduce((total, item) => {
@@ -35,7 +36,7 @@ const DeliveryForm = ({ isOpen, onClose, selectedItems, onRemoveItem, onClearIte
     }, 0).toFixed(2);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (selectedItems.length === 0) {
@@ -47,14 +48,43 @@ const DeliveryForm = ({ isOpen, onClose, selectedItems, onRemoveItem, onClearIte
       return;
     }
 
-    toast({
-      title: "Order Placed Successfully! 🎉",
-      description: `Your order of ${selectedItems.length} item(s) totaling $${calculateTotal()} will be delivered to ${formData.address}.`,
-    });
+    const total = Number(calculateTotal());
+    const items = selectedItems.map((item) => ({
+      id: item.id,
+      name: item.name,
+      price: Number(item.price.replace("$", "")),
+    }));
 
-    setFormData({ fullName: "", phone: "", address: "", city: "", zipCode: "", notes: "" });
-    onClearItems();
-    onClose();
+    try {
+      const response = await fetch(`${apiUrl}/api/delivery-orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          items,
+          total,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Unable to place delivery order.");
+      }
+
+      toast({
+        title: "Order Placed Successfully! 🎉",
+        description: `Your order of ${selectedItems.length} item(s) totaling $${calculateTotal()} will be delivered to ${formData.address}.`,
+      });
+
+      setFormData({ fullName: "", phone: "", address: "", city: "", zipCode: "", notes: "" });
+      onClearItems();
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Order failed",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
